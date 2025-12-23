@@ -1,5 +1,10 @@
 package com.example.examplemod;
 
+import com.example.examplemod.event.EntityEvents;
+import com.example.examplemod.gui.AnimalScreen;
+import com.example.examplemod.registry.ModAttachments;
+import com.example.examplemod.registry.ModMenus;
+import net.minecraft.client.gui.screens.MenuScreens;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -69,6 +74,13 @@ public class ExampleMod {
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
 
+        ModAttachments.ATTACHMENTS.register(modEventBus);
+        ModMenus.MENUS.register(modEventBus);
+
+        modEventBus.addListener(ExampleModClient::onRegisterScreens);
+
+        EntityEvents.register();
+
         // Register the Deferred Register to the mod event bus so blocks get registered
         BLOCKS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so items get registered
@@ -114,4 +126,6 @@ public class ExampleMod {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");
     }
+
+
 }
