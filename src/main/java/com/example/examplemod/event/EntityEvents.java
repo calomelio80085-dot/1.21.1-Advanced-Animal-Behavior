@@ -45,19 +45,28 @@ public class EntityEvents {
 
     @SubscribeEvent
     public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
-        if (event.getLevel().isClientSide()) return;
+        Player player = event.getEntity();
 
+        //Only run on server
+        if (player.level().isClientSide) return;
+
+        //Only main hand
+        if (event.getHand() != InteractionHand.MAIN_HAND) return;
+
+        //Only living entities
         if (!(event.getTarget() instanceof LivingEntity living)) return;
 
-        ServerPlayer player = (ServerPlayer) event.getEntity();
+        if (player instanceof ServerPlayer serverPlayer) {
+            serverPlayer.openMenu(
+                    new SimpleMenuProvider(
+                            (containerId, inventory, p) ->
+                                    new AnimalMenu(containerId, inventory, living),
+                            Component.literal("Animal")
+                    )
+            );
 
-        player.openMenu(new SimpleMenuProvider(
-                ((containerId, inventory, playerEntity) ->
-                        new AnimalMenu(containerId, inventory)),
-                Component.literal("Animal")
-        ));
-
-        event.setCancellationResult(InteractionResult.SUCCESS);
-        event.setCanceled(true);
+            event.setCanceled(true);
+            event.setCancellationResult(InteractionResult.SUCCESS);
+        }
     }
 }
