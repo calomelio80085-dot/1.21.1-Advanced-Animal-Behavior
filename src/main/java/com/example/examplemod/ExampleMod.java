@@ -1,10 +1,9 @@
 package com.example.examplemod;
 
+
 import com.example.examplemod.event.EntityEvents;
-import com.example.examplemod.gui.AnimalScreen;
 import com.example.examplemod.registry.ModAttachments;
 import com.example.examplemod.registry.ModMenus;
-import net.minecraft.client.gui.screens.MenuScreens;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -21,7 +20,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
@@ -77,9 +75,9 @@ public class ExampleMod {
         ModAttachments.ATTACHMENTS.register(modEventBus);
         ModMenus.MENUS.register(modEventBus);
 
-        modEventBus.addListener(ExampleModClient::onRegisterScreens);
+        NeoForge.EVENT_BUS.register(EntityEvents.class);
 
-        EntityEvents.register();
+        modEventBus.addListener(ExampleModClient::onRegisterScreens);
 
         // Register the Deferred Register to the mod event bus so blocks get registered
         BLOCKS.register(modEventBus);

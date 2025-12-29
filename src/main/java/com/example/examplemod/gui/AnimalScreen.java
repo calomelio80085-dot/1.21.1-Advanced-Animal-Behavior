@@ -1,6 +1,6 @@
 package com.example.examplemod.gui;
 
-import net.minecraft.client.gui.Gui;
+import com.example.examplemod.ExampleMod;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -9,8 +9,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
+import com.example.examplemod.gui.AnimalMenu;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+
+import javax.annotation.Nullable;
 
 public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
 
@@ -21,8 +24,15 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
     }
 
     //Helper methods
+    @Nullable
+    private LivingEntity getRenderableAnimal() {
+        if (this.minecraft == null || this.minecraft.level == null) return null;
+        return this.menu.getAnimal(this.minecraft.level);
+
+    }
+
     private LivingEntity getAnimal() {
-        return this.menu.getAnimal();
+        return this.menu.getAnimal(this.minecraft.level);
     }
 
     private void drawPanel(GuiGraphics g, int x, int y, int w, int h) {
@@ -62,39 +72,116 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
         for (int i = 0; i < 6; i++) {
             g.fill(x + i * 18, y, x + i * 18 + 16, y + 16, 0xFF2A2A2A);
         }
+
     }
 
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath("examplemod", "textures/gui/animal.png");
+            ResourceLocation.fromNamespaceAndPath(ExampleMod.MODID, "textures/gui/animalgui.png");
 
     @Override
-    protected void renderBg(GuiGraphics g, float partialTick, int mouseX, int mouseY) {
+    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+
+        //GUI Background
+        graphics.blit(TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
+
+        //Bars, bevels, plaques, etc.
+
+    //Render animal in inventory
+    LivingEntity animal = getRenderableAnimal();
+    if (animal != null) {
+        InventoryScreen.renderEntityInInventory(
+                graphics, leftPos + 30, topPos + 60, 25,
+                new Vector3f(0.0F, 0.0F, 0.0F),
+                new Quaternionf().rotationY((float) Math.PI),
+                new Quaternionf(),
+                animal
+        );
+    }
+
+
+        /*
+
+        if (animal != null) {
+            graphics.pose().pushPose();
+
+            InventoryScreen.renderEntityInInventory(
+                    graphics,
+                    leftPos + 51,
+                    topPos + 75,
+                    30,
+                    new Vector3f(0.0F, 0.0F, 0.0F),
+                    new Quaternionf().rotationXYZ(0.0F, 0.0F, 0.0F),
+                    new Quaternionf().rotationXYZ(0.0F, 0.0F, 0.0F),
+                    animal
+            );
+
+            graphics.pose().popPose();
+
+        }
+
+    graphics.pose().pushPose();
+
+    graphics.pose().translate(0, 0, 100);
+
+    graphics.fill(leftPos + 10, topPos + 10, leftPos + 40, topPos + 40, 0xFFFF0000);
+
+    graphics.pose().popPose();
+
     int x = this.leftPos;
     int y = this.topPos;
 
         //Main panel
-        g.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
+        graphics.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
 
-        //Player inventory
-        g.blit(TEXTURE, x, y + imageHeight - 90, 0, 166, imageWidth, 90);
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, 100);
 
         //Easy beveling (light)
-        g.fill(x, y, x + imageWidth, y + 1, 0x33FFFFFF);
-        g.fill(x, y, x + 1, y + imageHeight, 0x33FFFFFF);
+        graphics.fill(x, y, x + imageWidth, y + 1, 0x33FFFFFF);
+        graphics.fill(x, y, x + 1, y + imageHeight, 0x33FFFFFF);
 
         //Easy beveling (dark)
-        g.fill(x, y + imageHeight - 1,  x + imageWidth, y + imageHeight, 0x55000000);
-        g.fill(x + imageWidth - 1, y, x + imageWidth, y + imageHeight, 0x55000000);
+        graphics.fill(x, y + imageHeight - 1,  x + imageWidth, y + imageHeight, 0x55000000);
+        graphics.fill(x + imageWidth - 1, y, x + imageWidth, y + imageHeight, 0x55000000);
+
+        //Entity preview
+        LivingEntity animal = getAnimal();
+
+        if (animal != null) {
+            InventoryScreen.renderEntityInInventory(
+                    graphics,
+                    leftPos + 51,
+                    topPos + 75,
+                    30,
+                    new Vector3f(0.0F, 0.0F, 0.0F),
+                    new Quaternionf().rotationXYZ(0.0F, 0.0F, 0.0F),
+                    new Quaternionf().rotationXYZ(0.0F, 0.0F, 0.0F),
+                    animal
+            );
+        }
+
+        graphics.pose().popPose();
+
+        //Player inventory
+        graphics.blit(TEXTURE, x, y + imageHeight - 90, 0, 166, imageWidth, 90);
 
 
-    drawPanel(g, x, y, this.imageWidth, this.imageHeight);
-    drawPanel(g, x + 8, y + 18, 60, 60);
-    drawPanel(g, x + 74, y + 18, 94, 60);
-    drawPanel(g, x + 8, y + 82, 160, 16);
+    drawPanel(graphics, x, y, this.imageWidth, this.imageHeight);
+    drawPanel(graphics, x + 8, y + 18, 60, 60);
+    drawPanel(graphics, x + 74, y + 18, 94, 60);
+    drawPanel(graphics, x + 8, y + 82, 160, 16);
+
+    */
+
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.render(graphics, mouseX, mouseY, partialTick);
+        renderTooltip(graphics, mouseX, mouseY);
+
+        /*
+
         super.render(g, mouseX, mouseY, partialTick);
 
         LivingEntity animal = getAnimal();
@@ -106,23 +193,6 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
                     : animal.getType().getDescription();
         } else {
             displayName = Component.literal("Animal");
-        }
-
-        if (animal != null) {
-            Vector3f translation = new Vector3f(0.0F, 0.0F, 0.0F);
-            Quaternionf rotation = new Quaternionf().rotateY((float) Math.PI);
-            Quaternionf cameraOrientation = new Quaternionf();
-
-            InventoryScreen.renderEntityInInventory(
-                    g,
-                    leftPos + 45,
-                    topPos + 70,
-                    30,
-                    translation,
-                    rotation,
-                    cameraOrientation,
-                    animal
-            );
         }
 
         g.drawString(
@@ -159,4 +229,6 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
         this.renderTooltip(g, mouseX, mouseY);
     }
 
-}
+         */
+
+} }

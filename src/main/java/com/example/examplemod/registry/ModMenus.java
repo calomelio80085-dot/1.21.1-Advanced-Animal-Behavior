@@ -12,17 +12,17 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import net.minecraft.world.flag.FeatureFlags;
 
 import java.awt.*;
+import java.util.function.Supplier;
 
 public class ModMenus {
 
     public static final DeferredRegister<MenuType<?>> MENUS =
-            DeferredRegister.create(net.minecraft.core.registries.Registries.MENU, ExampleMod.MODID);
+            DeferredRegister.create(Registries.MENU, ExampleMod.MODID);
 
+    //ignore the "lambda can be replaced" as the methods are ambiguous and we need to call the right one directly
     public static final DeferredHolder<MenuType<?>, MenuType<AnimalMenu>> ANIMAL_MENU =
             MENUS.register("animal_menu",
-                    () -> new MenuType<>(
-                            (containerId, inventory) -> new AnimalMenu(containerId, inventory),
-                            FeatureFlags.DEFAULT_FLAGS
-            ));
-
+                    () -> new MenuType<>(AnimalMenu::new, FeatureFlags.DEFAULT_FLAGS)
+            );
 }
+
