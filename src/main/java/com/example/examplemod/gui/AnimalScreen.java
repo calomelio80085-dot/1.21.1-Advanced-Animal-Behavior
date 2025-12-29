@@ -25,14 +25,8 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
 
     //Helper methods
     @Nullable
-    private LivingEntity getRenderableAnimal() {
-        if (this.minecraft == null || this.minecraft.level == null) return null;
-        return this.menu.getAnimal(this.minecraft.level);
-
-    }
-
     private LivingEntity getAnimal() {
-        return this.menu.getAnimal(this.minecraft.level);
+        return this.menu.getAnimal();
     }
 
     private void drawPanel(GuiGraphics g, int x, int y, int w, int h) {
@@ -87,10 +81,17 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
         //Bars, bevels, plaques, etc.
 
     //Render animal in inventory
-    LivingEntity animal = getRenderableAnimal();
+        this.menu.resolveAnimal(this.minecraft.level);
+
+    LivingEntity animal = this.menu.getAnimal();
+
+    if (animal == null) {
+        System.out.println("CLIENT: AnimalScreen -> animal still NULL");
+        return;
+    }
     if (animal != null) {
         InventoryScreen.renderEntityInInventory(
-                graphics, leftPos + 30, topPos + 60, 25,
+                graphics, leftPos + 80, topPos + 75, 30,
                 new Vector3f(0.0F, 0.0F, 0.0F),
                 new Quaternionf().rotationY((float) Math.PI),
                 new Quaternionf(),
