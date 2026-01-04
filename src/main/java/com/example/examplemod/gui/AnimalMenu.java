@@ -23,7 +23,21 @@ public class AnimalMenu extends AbstractContainerMenu {
     //Client constructor (ModMenus)
     public AnimalMenu(int containerId, Inventory inventory) {
         super(ModMenus.ANIMAL_MENU.get(), containerId);
+        this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
+            @Override
+            public int get() {
+                return animalId;
+            }
+
+            @Override
+            public void set(int value) {
+                animalId = value;
+            }
+
+        });
         this.inventory = inventory;
+
+        System.out.println("CLIENT: AnimalMenu received animalId = " + this.animalId);
     }
 
     public void setAnimal(LivingEntity animal) {
@@ -34,11 +48,13 @@ public class AnimalMenu extends AbstractContainerMenu {
 
     @Nullable
     public LivingEntity getAnimal(Level level) {
+        System.out.println("CLIENT: getAnimal called with animalId = " + this.animalId);
         if (level == null) return null;
         if (this.animal == null) {
             Entity e = level.getEntity(this.animalId);
             if (e instanceof LivingEntity living) {
                 this.animal = living;
+                System.out.println("CLIENT: resolved animal " + this.animal);
             }
         }
         return this.animal;
