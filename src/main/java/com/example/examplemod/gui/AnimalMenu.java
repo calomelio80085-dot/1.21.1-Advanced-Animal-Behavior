@@ -1,7 +1,6 @@
 package com.example.examplemod.gui;
 
 import com.example.examplemod.registry.ModMenus;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
@@ -9,7 +8,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.neoforged.fml.common.Mod;
 
 import javax.annotation.Nullable;
 
@@ -68,5 +66,14 @@ public class AnimalMenu extends AbstractContainerMenu {
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
         return ItemStack.EMPTY;
+    }
+
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+
+        if (!player.level().isClientSide && animal instanceof net.minecraft.world.entity.Mob mob) {
+            mob.setNoAi(false);
+        }
     }
 }

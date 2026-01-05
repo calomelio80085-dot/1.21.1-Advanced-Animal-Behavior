@@ -8,6 +8,8 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.LivingEntity;
 
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -21,14 +23,17 @@ public class EntityEvents {
         if (event.getLevel().isClientSide()) return;
 
         if (!(event.getEntity() instanceof ServerPlayer serverPlayer)) return;
-        if (!(event.getTarget() instanceof LivingEntity livingEntity)) return;
+        if (!(event.getTarget() instanceof net.minecraft.world.entity.Mob mob)) return;
 
-        System.out.println("SERVER: Opening AnimalMenu for " + livingEntity);
+        //Stop the entity from moving temporarily
+        mob.setNoAi(true);
+        mob.setDeltaMovement(0, 0, 0);
+        mob.setPos(mob.position());
 
         serverPlayer.openMenu(new SimpleMenuProvider(
         (containerId, inventory, player) -> {
                     AnimalMenu menu = new AnimalMenu(containerId, inventory);
-                    menu.setAnimal(livingEntity);
+                    menu.setAnimal(mob);
                     return menu;
                 },
                 Component.literal("Animal")

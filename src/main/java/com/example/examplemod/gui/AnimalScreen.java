@@ -30,6 +30,25 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
         return this.menu.getAnimal(this.minecraft.level);
     }
 
+    @Nullable
+    private LivingEntity renderClone;
+
+    private void prepareRenderClone() {
+        if (renderClone == null) {
+            LivingEntity realAnimal = menu.getAnimal(this.minecraft.level);
+            if (realAnimal != null) {
+                renderClone = (LivingEntity) realAnimal.getType().create(this.minecraft.level);
+                if (renderClone != null) {
+                    renderClone.moveTo(realAnimal.getX(), realAnimal.getY(), realAnimal.getZ(),
+                            realAnimal.getYRot(), realAnimal.getXRot());
+                    renderClone.setYBodyRot(realAnimal.yBodyRot);
+                    renderClone.setYHeadRot(realAnimal.yHeadRot);
+                    renderClone.setXRot(realAnimal.getXRot());
+                }
+            }
+        }
+    }
+
     private void drawPanel(GuiGraphics g, int x, int y, int w, int h) {
         g.fill(x, y, x + w, y + h, 0xFF373737);
         g.fill(x + 1, y + 1, x + w - 1, y + h - 1, 0xFF8B8B8B);
@@ -73,6 +92,13 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
     private static final ResourceLocation TEXTURE =
             ResourceLocation.fromNamespaceAndPath(ExampleMod.MODID, "textures/gui/animalgui.png");
 
+    //Reset the temporary entity
+    @Override
+    public void removed() {
+        super.removed();
+        renderClone = null;
+    }
+
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
 
@@ -81,23 +107,41 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
 
         //Bars, bevels, plaques, etc.
 
-    //Render animal in inventory
+        //Render animal in inventory
+        prepareRenderClone();
 
-    LivingEntity animal = getAnimal();
+        LivingEntity entityToRender = menu.getAnimal((this.minecraft.level));
+            int entityX = leftPos + 35;
+            int entityY = topPos + 65;
 
-    if (animal == null) {
-        System.out.println("CLIENT: AnimalScreen -> animal still NULL");
-        return;
-    }
-    if (animal != null) {
-        InventoryScreen.renderEntityInInventory(
-                graphics, leftPos + 40, topPos + 75, 30,
-                new Vector3f(0.0F, 0.0F, 0.0F),
-                new Quaternionf().rotationY((float) Math.PI),
-                new Quaternionf(),
-                animal
-        );
-    }
+            //Lock translation offset
+            Vector3f cameraOffset = new Vector3f(0.0F, 0.0F, 0.0F);
+
+            //Base orientation
+            Quaternionf baseRotation = new Quaternionf()
+                    .rotateX((float) Math.PI);
+
+            //Mouse rotation
+            float yaw = (entityX - mouseX) * 0.015F;
+            float pitch = (entityY - mouseY) * 0.015F;
+            Quaternionf mouseRotation = new Quaternionf()
+                    .rotateX((float)Math.toRadians(180))
+                    .rotateY(yaw)
+                    .rotateX(pitch);
+
+            InventoryScreen.renderEntityInInventory(
+                    graphics,
+                    entityX,
+                    entityY,
+                    30,
+                    cameraOffset,
+                    baseRotation,
+                    mouseRotation,
+                    menu.getAnimal(this.minecraft.level)
+            );
+        }
+
+
 
 
         /*
@@ -175,12 +219,12 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
     */
 
     }
-
+    /*
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
         renderTooltip(graphics, mouseX, mouseY);
-
+*/
         /*
 
         super.render(g, mouseX, mouseY, partialTick);
@@ -232,4 +276,4 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
 
          */
 
-} }
+
