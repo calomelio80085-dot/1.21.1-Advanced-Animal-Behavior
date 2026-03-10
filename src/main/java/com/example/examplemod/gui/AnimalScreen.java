@@ -39,11 +39,11 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
             if (realAnimal != null) {
                 renderClone = (LivingEntity) realAnimal.getType().create(this.minecraft.level);
                 if (renderClone != null) {
-                    renderClone.moveTo(realAnimal.getX(), realAnimal.getY(), realAnimal.getZ(),
-                            realAnimal.getYRot(), realAnimal.getXRot());
-                    renderClone.setYBodyRot(realAnimal.yBodyRot);
-                    renderClone.setYHeadRot(realAnimal.yHeadRot);
-                    renderClone.setXRot(realAnimal.getXRot());
+                    renderClone.moveTo(0, 0, 0);
+                    renderClone.setYRot(0);
+                    renderClone.setXRot(0);
+                    renderClone.setYBodyRot(0);
+                    renderClone.setYHeadRot(0);
                 }
             }
         }
@@ -110,6 +110,8 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
         //Render animal in inventory
         prepareRenderClone();
 
+        if (renderClone == null) return;
+
         LivingEntity entityToRender = menu.getAnimal((this.minecraft.level));
             int entityX = leftPos + 35;
             int entityY = topPos + 65;
@@ -122,12 +124,23 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
                     .rotateX((float) Math.PI);
 
             //Mouse rotation
-            float yaw = (entityX - mouseX) * 0.015F;
-            float pitch = (entityY - mouseY) * 0.015F;
+            float yaw = (entityX - mouseX) * 0.02F;
+            float pitch = (entityY - mouseY) * 0.02F;
+
             Quaternionf mouseRotation = new Quaternionf()
-                    .rotateX((float)Math.toRadians(180))
                     .rotateY(yaw)
                     .rotateX(pitch);
+
+            float lookYaw = (entityX - mouseX) * 0.4F;
+            float lookPitch = (entityY - mouseY) * 0.4F;
+
+            renderClone.setYRot(lookYaw);
+            renderClone.setXRot(-lookPitch);
+
+            renderClone.yHeadRot = lookYaw;
+            renderClone.yBodyRot = lookYaw;
+            renderClone.yHeadRotO = lookYaw;
+            renderClone.yBodyRotO = lookYaw;
 
             InventoryScreen.renderEntityInInventory(
                     graphics,
@@ -136,8 +149,8 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
                     30,
                     cameraOffset,
                     baseRotation,
-                    mouseRotation,
-                    menu.getAnimal(this.minecraft.level)
+                    new Quaternionf().rotateX(-lookPitch * 0.02F),
+                    renderClone
             );
         }
 
