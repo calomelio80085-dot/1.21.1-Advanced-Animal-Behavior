@@ -17,41 +17,94 @@ import javax.annotation.Nullable;
 
 public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
 
+    //Get GUI flat background "texture"
+    private static final ResourceLocation TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(ExampleMod.MODID, "textures/gui/animalgui.png");
+
+    //Plaque constants
+    private static final int PLAQUE_COUNT = 6;
+    private static final int PLAQUE_SIZE = 16;
+    private static final int PLAQUE_SPACING = 18;
+
+    @Nullable
+    private LivingEntity renderClone;
+
     public AnimalScreen(AnimalMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = 176;
         this.imageHeight = 166;
     }
 
-    //Helper methods
-    @Nullable
-    private LivingEntity getAnimal() {
-        if (this.minecraft == null) return null;
-        return this.menu.getAnimal(this.minecraft.level);
+    //Find the particular animal for the GUI entity (plus failsafe)
+    private void prepareRenderClone() {
+        if (renderClone != null) return;
+
+        LivingEntity animal = menu.getAnimal(this.minecraft.level);
+        if (animal != null) {
+            renderClone = createClone(animal);
+        }
     }
 
-    @Nullable
-    private LivingEntity renderClone;
+    //Create the GUI entity and set everything to 0
+    private LivingEntity createClone(LivingEntity original) {
+        LivingEntity clone = (LivingEntity) original.getType().create(this.minecraft.level);
+        if (clone != null) {
+            clone.moveTo(0, 0, 0);
+            clone.setYRot(0);
+            clone.setXRot(0);
+            clone.setYBodyRot(0);
+            clone.setYHeadRot(0);
+        }
+        return clone;
+    }
 
-    private void prepareRenderClone() {
-        if (renderClone == null) {
-            LivingEntity realAnimal = menu.getAnimal(this.minecraft.level);
-            if (realAnimal != null) {
-                renderClone = (LivingEntity) realAnimal.getType().create(this.minecraft.level);
-                if (renderClone != null) {
-                    renderClone.moveTo(0, 0, 0);
-                    renderClone.setYRot(0);
-                    renderClone.setXRot(0);
-                    renderClone.setYBodyRot(0);
-                    renderClone.setYHeadRot(0);
-                }
-            }
+    @Override
+    public void removed() {
+        super.removed();
+        renderClone = null;
+    }
+
+    //Render entity helpers
+    private void applyMouseRotation(LivingEntity entity, float lookYaw, float lookPitch) {
+        entity.setYRot(lookYaw);
+        entity.setXRot(-lookPitch * 0.2F);
+        entity.yHeadRot = lookYaw;
+        entity.yBodyRot = lookYaw;
+        entity.yHeadRotO = lookYaw;
+        entity.yBodyRotO = lookYaw;
+    }
+
+    private Quaternionf getBaseRotation(float lookPitch) {
+        return new Quaternionf()
+                .rotateX((float) Math.PI)
+                .rotateX(-lookPitch * 0.02F);
+    }
+
+    private void drawPlaqueSlots(GuiGraphics g) {
+        int x = leftPos + 30;
+        int y = topPos + 130;
+
+        for (int i = 0; i < PLAQUE_COUNT; i++) {
+            g.fill(x + i * PLAQUE_SPACING, y, x + i * PLAQUE_SPACING + PLAQUE_SIZE, y + PLAQUE_SIZE, 0xFF2A2A2A);
         }
     }
 
     private void drawPanel(GuiGraphics g, int x, int y, int w, int h) {
         g.fill(x, y, x + w, y + h, 0xFF373737);
         g.fill(x + 1, y + 1, x + w - 1, y + h - 1, 0xFF8B8B8B);
+    }
+
+    private void drawTemperatureScale(GuiGraphics g, int x, int y, float deviation) {
+        g.fill(x, y, x + 80, y + 6, 0xFF555555);
+        int center = x + 40;
+        int offset = (int) (deviation * 40);
+        int marker = Mth.clamp(center + offset, x, x + 80);
+        g.fill(marker - 1, y, marker + 1, y + 6, 0xFFFFFFFF);
+    }
+
+    private void drawProductivityBar(GuiGraphics g, int x, int y, float value) {
+        g.fill(x, y, x + 100, y + 8, 0xFF404040);
+        g.fill(x, y, x + (int) (value * 100), y + 8, 0xFF7FBF7F);
     }
 
     private Component hungerText() {
@@ -62,234 +115,45 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
         return Component.literal("A little dry");
     }
 
-    private void drawTemperatureScale(GuiGraphics g, int x, int y, float deviation) {
-        //Background bar
-        g.fill(x, y, x + 80, y + 6, 0xFF555555);
-
-        //Center marker
-        int center = x + 40;
-        int offset = (int)(deviation * 40);
-        int marker = Mth.clamp(center + offset, x, x + 80);
-
-        g.fill(marker - 1, y, marker + 1, y + 6, 0xFFFFFFFF);
-    }
-
-    private void drawProductivityBar(GuiGraphics g, int x, int y, float value) {
-        g.fill(x, y, x + 100, y + 8, 0xFF404040);
-        g.fill(x, y, x + (int)(value * 100), y + 8, 0xFF7FBF7F);
-    }
-
-    private void drawPlaqueSlots(GuiGraphics g) {
-        int x = leftPos + 30;
-        int y = topPos + 130;
-
-        for (int i = 0; i < 6; i++) {
-            g.fill(x + i * 18, y, x + i * 18 + 16, y + 16, 0xFF2A2A2A);
-        }
-
-    }
-
-    private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(ExampleMod.MODID, "textures/gui/animalgui.png");
-
-    //Reset the temporary entity
-    @Override
-    public void removed() {
-        super.removed();
-        renderClone = null;
-    }
-
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
 
-        //GUI Background
+        //Draw GUI texture where?
         graphics.blit(TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
 
-        //Bars, bevels, plaques, etc.
-
-        //Render animal in inventory
         prepareRenderClone();
-
-        if (renderClone == null) return;
-
-        LivingEntity entityToRender = menu.getAnimal((this.minecraft.level));
+        if (renderClone != null) {
             int entityX = leftPos + 35;
             int entityY = topPos + 65;
 
-        float lookYaw = (entityX - mouseX) * 0.2F;
-        float lookPitch = (entityY - mouseY) * 0.2F;
+            //Calculate rotations based on mouse
+            float lookYaw = (entityX - mouseX) * 0.15F;
+            float lookPitch = (entityY - mouseY) * 0.15F;
 
-            //Locks model in the upper left corner w/ proper margins
-            Vector3f cameraOffset = new Vector3f(0.0F, 0.0F, 0.0F);
-
-            //Base rotation
-            Quaternionf baseRotation = new Quaternionf()
-                    .rotateX((float) Math.PI)
-                    .rotateX(-lookPitch * 0.02F);
-
-            //Mouse rotation
-            float yaw = (entityX - mouseX) * 0.02F;
-            float pitch = (entityY - mouseY) * 0.02F;
-
-            Quaternionf mouseRotation = new Quaternionf()
-                    .rotateY(yaw)
-                    .rotateX(pitch);
-
-            renderClone.setYRot(lookYaw);
-            renderClone.setXRot(-lookPitch * 0.2F);
-
-            renderClone.yHeadRot = lookYaw;
-            renderClone.yBodyRot = lookYaw;
-            renderClone.yHeadRotO = lookYaw;
-            renderClone.yBodyRotO = lookYaw;
+            applyMouseRotation(renderClone, lookYaw, lookPitch);
 
             InventoryScreen.renderEntityInInventory(
                     graphics,
                     entityX,
                     entityY,
                     30,
-                    cameraOffset,
-                    baseRotation,
-                    new Quaternionf()
-                            .rotateX(-lookPitch * 0.02F)
-                            .rotateX((float)Math.PI),
+                    new Vector3f(0, 0, 0),
+                    getBaseRotation(lookPitch),
+                    new Quaternionf().rotateX(-lookPitch * 0.02F).rotateX((float) Math.PI),
                     renderClone
             );
-        }
-
-
-
-
-        /*
-
-        if (animal != null) {
-            graphics.pose().pushPose();
-
-            InventoryScreen.renderEntityInInventory(
-                    graphics,
-                    leftPos + 51,
-                    topPos + 75,
-                    30,
-                    new Vector3f(0.0F, 0.0F, 0.0F),
-                    new Quaternionf().rotationXYZ(0.0F, 0.0F, 0.0F),
-                    new Quaternionf().rotationXYZ(0.0F, 0.0F, 0.0F),
-                    animal
-            );
-
-            graphics.pose().popPose();
 
         }
 
-    graphics.pose().pushPose();
+        // Draw GUI panels and overlays
+        drawPanel(graphics, leftPos, topPos, imageWidth, imageHeight);
+        drawPanel(graphics, leftPos + 8, topPos + 18, 60, 60);
+        drawPanel(graphics, leftPos + 74, topPos + 18, 94, 60);
+        drawPanel(graphics, leftPos + 8, topPos + 82, 160, 16);
 
-    graphics.pose().translate(0, 0, 100);
-
-    graphics.fill(leftPos + 10, topPos + 10, leftPos + 40, topPos + 40, 0xFFFF0000);
-
-    graphics.pose().popPose();
-
-    int x = this.leftPos;
-    int y = this.topPos;
-
-        //Main panel
-        graphics.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
-
-        graphics.pose().pushPose();
-        graphics.pose().translate(0, 0, 100);
-
-        //Easy beveling (light)
-        graphics.fill(x, y, x + imageWidth, y + 1, 0x33FFFFFF);
-        graphics.fill(x, y, x + 1, y + imageHeight, 0x33FFFFFF);
-
-        //Easy beveling (dark)
-        graphics.fill(x, y + imageHeight - 1,  x + imageWidth, y + imageHeight, 0x55000000);
-        graphics.fill(x + imageWidth - 1, y, x + imageWidth, y + imageHeight, 0x55000000);
-
-        //Entity preview
-        LivingEntity animal = getAnimal();
-
-        if (animal != null) {
-            InventoryScreen.renderEntityInInventory(
-                    graphics,
-                    leftPos + 51,
-                    topPos + 75,
-                    30,
-                    new Vector3f(0.0F, 0.0F, 0.0F),
-                    new Quaternionf().rotationXYZ(0.0F, 0.0F, 0.0F),
-                    new Quaternionf().rotationXYZ(0.0F, 0.0F, 0.0F),
-                    animal
-            );
-        }
-
-        graphics.pose().popPose();
-
-        //Player inventory
-        graphics.blit(TEXTURE, x, y + imageHeight - 90, 0, 166, imageWidth, 90);
-
-
-    drawPanel(graphics, x, y, this.imageWidth, this.imageHeight);
-    drawPanel(graphics, x + 8, y + 18, 60, 60);
-    drawPanel(graphics, x + 74, y + 18, 94, 60);
-    drawPanel(graphics, x + 8, y + 82, 160, 16);
-
-    */
+        drawTemperatureScale(graphics, leftPos + 30, topPos + 95, 0.0f);
+        drawProductivityBar(graphics, leftPos + 30, topPos + 115, 0.65f);
+        drawPlaqueSlots(graphics);
 
     }
-    /*
-    @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        super.render(graphics, mouseX, mouseY, partialTick);
-        renderTooltip(graphics, mouseX, mouseY);
-*/
-        /*
-
-        super.render(g, mouseX, mouseY, partialTick);
-
-        LivingEntity animal = getAnimal();
-
-        Component displayName;
-        if (animal != null) {
-            displayName = animal.hasCustomName()
-                    ? animal.getCustomName()
-                    : animal.getType().getDescription();
-        } else {
-            displayName = Component.literal("Animal");
-        }
-
-        g.drawString(
-                this.font,
-                displayName,
-                this.leftPos + 8,
-                this.topPos + 6,
-                0x404040,
-                false
-        );
-
-        g.drawString(
-                this.font,
-                hungerText(),
-                this.leftPos + 78,
-                this. topPos + 24,
-                0x404040,
-                false
-        );
-
-        g.drawString(
-                this.font,
-                hydrationText(),
-                this.leftPos + 78,
-                this.topPos + 36,
-                0x303030,
-                false
-        );
-
-        drawTemperatureScale(g, leftPos + 30, topPos + 95, 0.0f);
-        drawProductivityBar(g, leftPos + 30, topPos + 115, 0.65f);
-        drawPlaqueSlots(g);
-
-        this.renderTooltip(g, mouseX, mouseY);
-    }
-
-         */
-
-
+}
