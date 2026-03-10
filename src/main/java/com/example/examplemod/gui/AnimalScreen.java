@@ -116,12 +116,16 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
             int entityX = leftPos + 35;
             int entityY = topPos + 65;
 
-            //Lock translation offset
+        float lookYaw = (entityX - mouseX) * 0.2F;
+        float lookPitch = (entityY - mouseY) * 0.2F;
+
+            //Locks model in the upper left corner w/ proper margins
             Vector3f cameraOffset = new Vector3f(0.0F, 0.0F, 0.0F);
 
-            //Base orientation
+            //Base rotation
             Quaternionf baseRotation = new Quaternionf()
-                    .rotateX((float) Math.PI);
+                    .rotateX((float) Math.PI)
+                    .rotateX(-lookPitch * 0.02F);
 
             //Mouse rotation
             float yaw = (entityX - mouseX) * 0.02F;
@@ -131,11 +135,8 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
                     .rotateY(yaw)
                     .rotateX(pitch);
 
-            float lookYaw = (entityX - mouseX) * 0.4F;
-            float lookPitch = (entityY - mouseY) * 0.4F;
-
             renderClone.setYRot(lookYaw);
-            renderClone.setXRot(-lookPitch);
+            renderClone.setXRot(-lookPitch * 0.2F);
 
             renderClone.yHeadRot = lookYaw;
             renderClone.yBodyRot = lookYaw;
@@ -149,7 +150,9 @@ public class AnimalScreen extends AbstractContainerScreen<AnimalMenu> {
                     30,
                     cameraOffset,
                     baseRotation,
-                    new Quaternionf().rotateX(-lookPitch * 0.02F),
+                    new Quaternionf()
+                            .rotateX(-lookPitch * 0.02F)
+                            .rotateX((float)Math.PI),
                     renderClone
             );
         }

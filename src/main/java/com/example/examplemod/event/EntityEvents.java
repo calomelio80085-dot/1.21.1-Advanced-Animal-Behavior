@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.LivingEntity;
 
+import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
@@ -23,17 +24,17 @@ public class EntityEvents {
         if (event.getLevel().isClientSide()) return;
 
         if (!(event.getEntity() instanceof ServerPlayer serverPlayer)) return;
-        if (!(event.getTarget() instanceof net.minecraft.world.entity.Mob mob)) return;
+        if (!(event.getTarget() instanceof Sheep sheep)) return;
 
         //Stop the entity from moving temporarily
-        mob.setNoAi(true);
-        mob.setDeltaMovement(0, 0, 0);
-        mob.setPos(mob.position());
+        sheep.setNoAi(true);
+        sheep.setDeltaMovement(0, 0, 0);
+        sheep.setPos(sheep.position());
 
         serverPlayer.openMenu(new SimpleMenuProvider(
         (containerId, inventory, player) -> {
                     AnimalMenu menu = new AnimalMenu(containerId, inventory);
-                    menu.setAnimal(mob);
+                    menu.setAnimal(sheep);
                     return menu;
                 },
                 Component.literal("Animal")
